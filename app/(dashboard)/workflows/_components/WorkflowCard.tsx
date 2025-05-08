@@ -1,11 +1,26 @@
 "use client";
 
-import { buttonVariants } from "@/components/ui/button";
+import TooltipWrapper from "@/components/TooltipWrapper";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { WorkFlow } from "@/generated/prisma";
 import { cn } from "@/lib/utils";
 import { WorkflowStatusEnum } from "@/types/workflow";
-import { FileTextIcon, PlayIcon, ShuffleIcon } from "lucide-react";
+import {
+  FileTextIcon,
+  MoreVerticalIcon,
+  PlayIcon,
+  ShuffleIcon,
+  TrashIcon,
+} from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -63,10 +78,34 @@ function WorkflowCard({ workflow }: { workflow: WorkFlow }) {
             <ShuffleIcon size={16} />
             Edit
           </Link>
-          <WorkflowAc
+          <WorkflowActions />
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function WorkflowActions() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm">
+          <TooltipWrapper content="More actions">
+            <div className="flex items-center justify-center w-full h-full">
+              <MoreVerticalIcon size={18} />
+            </div>
+          </TooltipWrapper>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="text-destructive flex items-center gap-2 cursor-pointer">
+          <TrashIcon size={16} />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
