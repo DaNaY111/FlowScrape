@@ -14,7 +14,7 @@ export async function GetWorkflowsForUser() {
       userId,
     },
     orderBy: {
-      createdAt: "asc",
+      createdAt: "desc",
     },
   });
 }
