@@ -12,18 +12,17 @@ import {
 import React from "react";
 
 import "@xyflow/react/dist/style.css";
+import { createFlowNode } from "@/lib/workflow/createFlowNode";
+import { TaskType } from "@/types/task";
+import NodeComponent from "./nodes/NodeComponent";
+
+const nodeTypes = {
+  Node: NodeComponent
+}
 
 function FlowEditor({ workflow }: { workflow: WorkFlow }) {
-  // TODO: FIX LABEL
   const [nodes, setNodes, onNodesChange] = useNodesState([
-    {
-      id: "1",
-      position: { x: 0, y: 0 },
-      data: {
-        label: "Пример",
-      },
-      type: "default",
-    },
+    createFlowNode(TaskType.LAUNCH_BROWSER)
   ]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
@@ -34,6 +33,7 @@ function FlowEditor({ workflow }: { workflow: WorkFlow }) {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
       >
         <Controls position="top-left" />
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
