@@ -21,6 +21,7 @@ import { TaskType } from "@/types/task";
 import NodeComponent from "./nodes/NodeComponent";
 import { AppNode } from "@/types/appNode";
 import DeletableEdge from "./edges/DeletableEdge";
+import { TaskRegistry } from "@/lib/workflow/task/registry";
 
 const nodeTypes = {
   FlowScrapeNode: NodeComponent,
@@ -36,7 +37,7 @@ const fitViewOptions = { padding: 3 };
 function FlowEditor({ workflow }: { workflow: WorkFlow }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { setViewport, screenToFlowPosition } = useReactFlow();
+  const { setViewport, screenToFlowPosition, updateNodeData } = useReactFlow();
 
   useEffect(() => {
     try {
@@ -75,8 +76,53 @@ function FlowEditor({ workflow }: { workflow: WorkFlow }) {
   const onConnect = useCallback(
     (connection: Connection) => {
       setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
+      if (!connection.targetHandle) return;
+
+      const node = nodes.find((nd) => nd.id === connection.target);
+      if (!node) return;
+      const nodeInputs = node.data.inputs;
+      updateNodeData(node.id, {
+        inputs: {
+          ...nodeInputs,
+          [connection.targetHandle]: "",
+        },
+      });
     },
-    [setEdges]
+    [setEdges, nodes, updateNodeData]
+  );
+
+  const isValidConnection = useCallback(
+    (connection: Edge | Connection) => {
+      if (connection.source === connection.target) {
+        return false;
+      }
+
+      const source = nodes.find((node) => node.id === connection.source);
+      const target = nodes.find((node) => node.id === connection.target);
+
+      if (!source || !target) {
+        console.error("Invalid connection: source or target not found");
+        return false;
+      }
+
+      const sourceTask = TaskRegistry[source.data.type];
+      const targetTask = TaskRegistry[target.data.type];
+
+      const output = sourceTask.outputs.find(
+        (o) => o.name === connection.sourceHandle
+      );
+
+      const input = targetTask.inputs.find(
+        (o) => o.name === connection.targetHandle
+      );
+
+      if (input?.type !== output?.type) {
+        console.error("Invalid connection: type mismatch");
+        return false;
+      }
+      return true;
+    },
+    [nodes]
   );
 
   return (
@@ -95,6 +141,7 @@ function FlowEditor({ workflow }: { workflow: WorkFlow }) {
         onDragOver={onDragOver}
         onDrop={onDrop}
         onConnect={onConnect}
+        isValidConnection={isValidConnection}
       >
         <Controls position="top-left" fitViewOptions={fitViewOptions} />
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
