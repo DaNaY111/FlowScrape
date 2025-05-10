@@ -23,7 +23,6 @@ function NodeCard({
         const { width, height } = measured;
         const x = position.x + width! / 2;
         const y = position.y + height! / 2;
-        console.log("@POSITION: ", position);
         if (x === undefined || y === undefined) return;
         setCenter(x, y, {
           zoom: 1,
