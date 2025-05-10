@@ -10,11 +10,12 @@ export const LaunchBrowserTask = {
   isEntryPoint: true,
   inputs: [
     {
-        name: 'Website URL',
-        type: TaskParamType.STRING,
-        helperText: 'eg: https://www.google.com',
-        required: true,
-        hideHandle: true
-    }
-  ]
+      name: "Website URL",
+      type: TaskParamType.STRING,
+      helperText: "eg: https://www.google.com",
+      required: true,
+      hideHandle: true,
+    },
+  ],
+  outputs: [{name: "Web page", type: TaskParamType.BROWSER_INSTANCE}]
 };

@@ -10,12 +10,13 @@ import {
   useNodesState,
   useReactFlow,
 } from "@xyflow/react";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 
 import "@xyflow/react/dist/style.css";
-import { createFlowNode } from "@/lib/workflow/createFlowNode";
+import { CreateFlowNode } from "@/lib/workflow/createFlowNode";
 import { TaskType } from "@/types/task";
 import NodeComponent from "./nodes/NodeComponent";
+import { AppNode } from "@/types/appNode";
 
 const nodeTypes = {
   FlowScrapeNode: NodeComponent,
@@ -25,9 +26,9 @@ const snapGrid: [number, number] = [50, 50];
 const fitViewOptions = { padding: 3 };
 
 function FlowEditor({ workflow }: { workflow: WorkFlow }) {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const { setViewport } = useReactFlow();
+  const { setViewport, screenToFlowPosition } = useReactFlow();
 
   useEffect(() => {
     try {
@@ -41,6 +42,25 @@ function FlowEditor({ workflow }: { workflow: WorkFlow }) {
     } catch (error) {}
   }, [workflow.definition, setEdges, setNodes, setViewport]);
 
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move"
+  }, []);
+
+  const onDrop = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    const taskType = event.dataTransfer.getData("application/reactflow")
+    if (typeof TaskType === undefined || !taskType) return;
+
+    const position = screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY
+    });
+
+    const newNode = CreateFlowNode(taskType as TaskType, position);
+    setNodes((nds) => nds.concat(newNode))
+  }, [setNodes, screenToFlowPosition])
+
   return (
     <main className="w-full h-full">
       <ReactFlow
@@ -53,6 +73,8 @@ function FlowEditor({ workflow }: { workflow: WorkFlow }) {
         snapGrid={snapGrid}
         fitViewOptions={fitViewOptions}
         fitView
+        onDragOver={onDragOver}
+        onDrop={onDrop}
       >
         <Controls position="top-left" fitViewOptions={fitViewOptions} />
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
