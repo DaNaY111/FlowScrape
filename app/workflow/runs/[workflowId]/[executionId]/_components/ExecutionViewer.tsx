@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { GetWorkflowExecutionWithPhases } from "@/lib/actions/workflows/getWorkflowExecutionWithPhases";
+import { DatesToDurationString } from "@/lib/helper/dates";
+import { GetPhasesTotalCost } from "@/lib/helper/phases";
 import { WorkflowExectuionStatus } from "@/types/workflow";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -12,6 +14,7 @@ import {
   CircleDashedIcon,
   ClockIcon,
   CoinsIcon,
+  Loader2Icon,
   LucideIcon,
   WorkflowIcon,
 } from "lucide-react";
@@ -31,6 +34,13 @@ export default function ExecutionViewer({
     refetchInterval: (q) =>
       q.state.data?.status === WorkflowExectuionStatus.RUNNING ? 1000 : false,
   });
+
+  const duration = DatesToDurationString(
+    query.data?.completedAt,
+    query.data?.startedAt
+  );
+
+  const creditsConsumed = GetPhasesTotalCost(query.data?.phases || []);
 
   return (
     <div className="flex w-full h-full">
@@ -54,11 +64,21 @@ export default function ExecutionViewer({
               </span>
             }
           />
-          <ExecutionLabel icon={ClockIcon} label="Duration" value={"1 min"} />
+          <ExecutionLabel
+            icon={ClockIcon}
+            label="Duration"
+            value={
+              duration ? (
+                duration
+              ) : (
+                <Loader2Icon className="animate-spin" size={20} />
+              )
+            }
+          />
           <ExecutionLabel
             icon={CoinsIcon}
             label="Credits consumed"
-            value={"5"}
+            value={creditsConsumed}
           />
         </div>
         <Separator />
@@ -80,6 +100,7 @@ export default function ExecutionViewer({
                 <Badge variant="outline">{index + 1}</Badge>
                 <p className="font-semibold">{phase.name}</p>
               </div>
+              <p className="text-xs text-muted-foreground">{phase.status}</p>
             </Button>
           ))}
         </div>
