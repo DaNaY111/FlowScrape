@@ -9,6 +9,8 @@ import { waitFor } from "../helper/waitFor";
 import { ExectuionPhase } from "@/generated/prisma";
 import { AppNode } from "@/types/appNode";
 import { TaskRegistry } from "./task/registry";
+import { ExecutorRegistry } from "./executor/registry";
+import { Environment } from "@/types/executor";
 
 export async function ExecuteWorkflow(executionId: string) {
   const execution = await prisma.workFlowExecution.findUnique({
@@ -25,7 +27,7 @@ export async function ExecuteWorkflow(executionId: string) {
     throw new Error("execution not found");
   }
 
-  const environment = { phases: {} };
+  const environment: Environment = { phases: {} };
 
   await initializeWorkflowExecution(executionId, execution.workflowId);
   await initializePhaseStatuses(execution);
@@ -33,7 +35,7 @@ export async function ExecuteWorkflow(executionId: string) {
   let creditsConsumed = 0;
   let executionFailed = false;
   for (const phase of execution.phases) {
-    const phaseExecution = await executeWorkflowPhase(phase);
+    const phaseExecution = await executeWorkflowPhase(phase, environment);
     if (!phaseExecution.success) {
       executionFailed = true;
       break;
@@ -121,7 +123,10 @@ async function finalizeWorkflowExecution(
     });
 }
 
-async function executeWorkflowPhase(phase: ExectuionPhase) {
+async function executeWorkflowPhase(
+  phase: ExectuionPhase,
+  environment: Environment
+) {
   const startedAt = new Date();
   const node = JSON.parse(phase.node) as AppNode;
 
@@ -138,9 +143,7 @@ async function executeWorkflowPhase(phase: ExectuionPhase) {
     `Executing phase ${phase.name} with ${creditsRequired} credits required`
   );
 
-  // execute phase simulation
-  await waitFor(2000);
-  const success = Math.random() < 0.8;
+  const success = await executePhase(phase, node, environment);
 
   await finalizePhase(phase.id, success);
   return { success };
@@ -160,4 +163,17 @@ async function finalizePhase(phaseId: string, success: boolean) {
       completedAt: new Date(),
     },
   });
+}
+
+async function executePhase(
+  phase: ExectuionPhase,
+  node: AppNode,
+  environment: Environment
+): Promise<boolean> {
+  const runFn = ExecutorRegistry[node.data.type];
+  if (!runFn) {
+    return false;
+  }
+
+  return await runFn(environment);
 }
