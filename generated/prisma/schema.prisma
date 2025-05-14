@@ -20,8 +20,48 @@ model WorkFlow {
   definition String
   status     String
 
+  lastRunAt     DateTime?
+  lastRunId     String?
+  lastRunStatus String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  executions WorkFlowExecution[]
+
   @@unique([name, userId])
+}
+
+model WorkFlowExecution {
+  id          String    @id @default(cuid())
+  workflowId  String
+  userId      String
+  trigger     String
+  status      String
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  creditsConsumed Int @default(0)
+
+  phases ExectuionPhase[]
+
+  workflow WorkFlow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+model ExectuionPhase {
+  id          String    @id @default(cuid())
+  userId      String
+  status      String
+  number      Int
+  node        String
+  name        String
+  startedAt   DateTime?
+  completedAt DateTime?
+  inputs      String?
+  outputs     String?
+
+  creditsConsumed     Int?
+  workflowExecutionId String
+  execution           WorkFlowExecution @relation(fields: [workflowExecutionId], references: [id], onDelete: Cascade)
 }
