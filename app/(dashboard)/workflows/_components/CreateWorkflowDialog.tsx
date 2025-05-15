@@ -85,9 +85,7 @@ function CreateWorkflowDialog({ triggerText }: { triggerText?: string }) {
                   <FormItem>
                     <FormLabel className="flex gap-1 items-center">
                       Name
-                      <span className="text-xs text-primary">
-                        (required)
-                      </span>{" "}
+                      <span className="text-xs text-primary">(required)</span>
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter workflow name" {...field} />
