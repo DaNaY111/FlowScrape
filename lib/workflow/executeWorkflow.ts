@@ -5,12 +5,14 @@ import {
   WorkflowExectuionStatus,
 } from "@/types/workflow";
 import prisma from "../prisma";
-import { waitFor } from "../helper/waitFor";
 import { ExectuionPhase } from "@/generated/prisma";
 import { AppNode } from "@/types/appNode";
 import { TaskRegistry } from "./task/registry";
 import { ExecutorRegistry } from "./executor/registry";
-import { Environment } from "@/types/executor";
+import { Environment, ExecutionEnvironment } from "@/types/executor";
+import { LaunchBrowserTask } from "./task/LaunchBrowser";
+import { TaskParamType } from "@/types/task";
+import { Browser, Page } from "puppeteer";
 
 export async function ExecuteWorkflow(executionId: string) {
   const execution = await prisma.workFlowExecution.findUnique({
@@ -49,6 +51,7 @@ export async function ExecuteWorkflow(executionId: string) {
     creditsConsumed
   );
 
+  await cleanupEnvironment(environment);
   revalidatePath("/workflows/runs");
 }
 
@@ -136,6 +139,7 @@ async function executeWorkflowPhase(
     data: {
       status: ExectuionPhaseStatus.RUNNING,
       startedAt,
+      inputs: JSON.stringify(environment.phases[node.id].inputs),
     },
   });
 
@@ -176,17 +180,44 @@ async function executePhase(
     return false;
   }
 
-  return await runFn(environment.phases[node.id]);
+  const executionEnvironment: ExecutionEnvironment<any> =
+    createExecutionEnvironment(node, environment);
+
+  return await runFn(executionEnvironment);
 }
 
 function setupEnvironmentForPhase(node: AppNode, environment: Environment) {
   environment.phases[node.id] = { inputs: {}, outputs: {} };
   const inputs = TaskRegistry[node.data.type].inputs;
   for (const input of inputs) {
+    if (input.type === TaskParamType.BROWSER_INSTANCE) continue;
     const inputValue = node.data.inputs[input.name];
     if (inputValue) {
       environment.phases[node.id].inputs[input.name] = inputValue;
       continue;
     }
+  }
+}
+
+function createExecutionEnvironment(
+  node: AppNode,
+  environment: Environment
+): ExecutionEnvironment<any> {
+  return {
+    getInput: (name: string) => environment.phases[node.id]?.inputs[name],
+
+    getBrowser: () => environment.browser,
+    setBrowser: (browser: Browser) => (environment.browser = browser),
+
+    getPage: () => environment.page,
+    setPage: (page: Page) => (environment.page = page),
+  };
+}
+
+async function cleanupEnvironment(environment: Environment) {
+  if (environment.browser) {
+    await environment.browser
+      .close()
+      .catch((err) => console.error("cannot close browser, reason: ", err));
   }
 }
