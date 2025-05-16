@@ -26,7 +26,10 @@ import { DatesToDurationString } from "@/lib/helper/dates";
 import { GetPhasesTotalCost } from "@/lib/helper/phases";
 import { cn } from "@/lib/utils";
 import { LogLevel } from "@/types/log";
-import { WorkflowExecutionStatus } from "@/types/workflow";
+import {
+  ExecutionPhaseStatus,
+  WorkflowExecutionStatus,
+} from "@/types/workflow";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -38,7 +41,8 @@ import {
   LucideIcon,
   WorkflowIcon,
 } from "lucide-react";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import PhaseStatusBadge from "./PhaseStatusBadge";
 
 type ExecutionData = Awaited<ReturnType<typeof GetWorkflowExecutionWithPhases>>;
 
@@ -63,6 +67,24 @@ export default function ExecutionViewer({
   });
 
   const isRunning = query.data?.status === WorkflowExecutionStatus.RUNNING;
+
+  useEffect(() => {
+    const phases = query.data?.phases || [];
+    if (isRunning) {
+      const phaseToSelect = phases.toSorted((a, b) =>
+        a.startedAt! > b.startedAt! ? -1 : 1
+      )[0];
+
+      setSelectedPhase(phaseToSelect.id);
+      return;
+    }
+
+    const phaseToSelect = phases.toSorted((a, b) =>
+      a.completedAt! > b.completedAt! ? -1 : 1
+    )[0];
+
+    setSelectedPhase(phaseToSelect.id);
+  }, [query.data?.phases, isRunning, setSelectedPhase]);
 
   const duration = DatesToDurationString(
     query.data?.completedAt,
@@ -133,7 +155,7 @@ export default function ExecutionViewer({
                 <Badge variant="outline">{index + 1}</Badge>
                 <p className="font-semibold">{phase.name}</p>
               </div>
-              <p className="text-xs text-muted-foreground">{phase.status}</p>
+              <PhaseStatusBadge status={phase.status as ExecutionPhaseStatus} />
             </Button>
           ))}
         </div>

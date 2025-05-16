@@ -5,9 +5,9 @@ import { ExecuteWorkflow } from "@/lib/workflow/executeWorkflow";
 import { FlowToExecutionPlan } from "@/lib/workflow/executionPlan";
 import { TaskRegistry } from "@/lib/workflow/task/registry";
 import {
-  ExectuionPhaseStatus,
-  WorkflowExectuionStatus,
+  ExecutionPhaseStatus,
   WorkflowExecutionPlan,
+  WorkflowExecutionStatus,
   WorkflowExecutionTrigger,
 } from "@/types/workflow";
 import { auth } from "@clerk/nextjs/server";
@@ -60,7 +60,7 @@ export async function RunWorkflow(form: {
     data: {
       workflowId,
       userId,
-      status: WorkflowExectuionStatus.PENDING,
+      status: WorkflowExecutionStatus.PENDING,
       startedAt: new Date(),
       trigger: WorkflowExecutionTrigger.MANUAL,
       definition: flowDefinition,
@@ -69,7 +69,7 @@ export async function RunWorkflow(form: {
           return phase.nodes.flatMap((node) => {
             return {
               userId,
-              status: ExectuionPhaseStatus.CREATED,
+              status: ExecutionPhaseStatus.CREATED,
               number: phase.phase,
               node: JSON.stringify(node),
               name: TaskRegistry[node.data.type].label,
