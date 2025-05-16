@@ -1,8 +1,8 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
 import {
-  ExectuionPhaseStatus,
-  WorkflowExectuionStatus,
+  ExecutionPhaseStatus,
+  WorkflowExecutionStatus,
 } from "@/types/workflow";
 import prisma from "../prisma";
 import { ExectuionPhase } from "@/generated/prisma";
@@ -72,7 +72,7 @@ async function initializeWorkflowExecution(
     where: { id: executionId },
     data: {
       startedAt: new Date(),
-      status: WorkflowExectuionStatus.RUNNING,
+      status: WorkflowExecutionStatus.RUNNING,
     },
   });
 
@@ -82,7 +82,7 @@ async function initializeWorkflowExecution(
     },
     data: {
       lastRunAt: new Date(),
-      lastRunStatus: WorkflowExectuionStatus.RUNNING,
+      lastRunStatus: WorkflowExecutionStatus.RUNNING,
       lastRunId: executionId,
     },
   });
@@ -96,7 +96,7 @@ async function initializePhaseStatuses(execution: any) {
       },
     },
     data: {
-      status: ExectuionPhaseStatus.PENDING,
+      status: ExecutionPhaseStatus.PENDING,
     },
   });
 }
@@ -108,8 +108,8 @@ async function finalizeWorkflowExecution(
   creditsConsumed: number
 ) {
   const finalStatus = exectuionFailed
-    ? WorkflowExectuionStatus.FAILED
-    : WorkflowExectuionStatus.COMPLETED;
+    ? WorkflowExecutionStatus.FAILED
+    : WorkflowExecutionStatus.COMPLETED;
 
   await prisma.workFlowExecution.update({
     where: { id: executionId },
@@ -148,7 +148,7 @@ async function executeWorkflowPhase(
   await prisma.exectuionPhase.update({
     where: { id: phase.id },
     data: {
-      status: ExectuionPhaseStatus.RUNNING,
+      status: ExecutionPhaseStatus.RUNNING,
       startedAt,
       inputs: JSON.stringify(environment.phases[node.id].inputs),
     },
@@ -173,8 +173,8 @@ async function finalizePhase(
   logCollector: LogCollector
 ) {
   const finalStatus = success
-    ? ExectuionPhaseStatus.COMPLETED
-    : ExectuionPhaseStatus.FAILED;
+    ? ExecutionPhaseStatus.COMPLETED
+    : ExecutionPhaseStatus.FAILED;
 
   await prisma.exectuionPhase.update({
     where: {
