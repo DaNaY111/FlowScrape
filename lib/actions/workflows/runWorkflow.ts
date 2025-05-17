@@ -9,6 +9,7 @@ import {
   WorkflowExecutionPlan,
   WorkflowExecutionStatus,
   WorkflowExecutionTrigger,
+  WorkflowStatusEnum,
 } from "@/types/workflow";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -40,21 +41,27 @@ export async function RunWorkflow(form: {
   }
 
   let executionPlan: WorkflowExecutionPlan;
-  if (!flowDefinition) {
-    throw new Error("flow definition is not defined");
-  }
+  if (workflow.status === WorkflowStatusEnum.PUBLISHED) {
+    if (!workflow.executionPlan) {
+      throw new Error("no execution plan found in published workflow");
+    }
+    executionPlan = JSON.parse(workflow.executionPlan!);
+  } else {
+    if (!flowDefinition) {
+      throw new Error("flow definition is not defined");
+    }
+    const flow = JSON.parse(flowDefinition);
+    const result = FlowToExecutionPlan(flow.nodes, flow.edges);
+    if (result.error) {
+      throw new Error("flow definition not valid");
+    }
 
-  const flow = JSON.parse(flowDefinition);
-  const result = FlowToExecutionPlan(flow.nodes, flow.edges);
-  if (result.error) {
-    throw new Error("flow definition not valid");
-  }
+    if (!result.executionPlan) {
+      throw new Error("no execution plan generated");
+    }
 
-  if (!result.executionPlan) {
-    throw new Error("no execution plan generated");
+    executionPlan = result.executionPlan;
   }
-
-  executionPlan = result.executionPlan;
 
   const execution = await prisma.workFlowExecution.create({
     data: {
