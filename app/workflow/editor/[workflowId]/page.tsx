@@ -8,7 +8,7 @@ async function page({ params }: { params: { workflowId: string } }) {
   const { userId } = auth();
 
   if (!userId) {
-    return <div>401: unauthorized</div>;
+    return <div>unauthorized</div>;
   }
 
   const workflow = await prisma.workFlow.findUnique({

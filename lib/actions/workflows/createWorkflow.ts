@@ -21,7 +21,7 @@ export async function CreateWorkflow(form: createWorkflowSchemaType) {
   const { userId } = auth();
 
   if (!userId) {
-    throw new Error("401: unauthorized");
+    throw new Error("unauthorized");
   }
 
   const initialFlow: { nodes: AppNode[]; edges: Edge[] } = {
