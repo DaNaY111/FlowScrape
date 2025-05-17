@@ -8,6 +8,7 @@ import React from "react";
 import SaveBtn from "./SaveBtn";
 import ExecuteBtn from "./ExecuteBtn";
 import NavigationTabs from "./NavigationTabs";
+import PublishBtn from "./PublishBtn";
 
 interface Props {
   title: string;
@@ -46,6 +47,7 @@ export default function Topbar({
           <>
             <SaveBtn workflowId={workflowId} />
             <ExecuteBtn workflowId={workflowId} />
+            <PublishBtn workflowId={workflowId} />
           </>
         )}
       </div>
