@@ -20,11 +20,15 @@ model WorkFlow {
   definition      String
   executionPlan   String?
   creditsConsumed Int @default(0)
-  status          String
+
+  cron String?
+
+  status String
 
   lastRunAt     DateTime?
   lastRunId     String?
   lastRunStatus String?
+  nextRunAt     DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,16 +57,16 @@ model WorkFlowExecution {
 }
 
 model ExectuionPhase {
-  id                  String @id @default(cuid())
-  userId              String
-  status              String
-  number              Int
-  node                String
-  name                String
-  startedAt           DateTime?
-  completedAt         DateTime?
-  inputs              String?
-  outputs             String?
+  id          String @id @default(cuid())
+  userId      String
+  status      String
+  number      Int
+  node        String
+  name        String
+  startedAt   DateTime?
+  completedAt DateTime?
+  inputs      String?
+  outputs     String?
 
   creditsConsumed     Int?
   workflowExecutionId String
