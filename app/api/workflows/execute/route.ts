@@ -10,9 +10,8 @@ import {
 import { timingSafeEqual } from "crypto";
 import parser from "cron-parser";
 
-export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-
+export async function GET(req: Request) {
+  const authHeader = req.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
@@ -22,9 +21,8 @@ export async function GET(request: Request) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = new URL(req.url);
   const workflowId = searchParams.get("workflowId") as string;
-
   if (!workflowId) {
     return Response.json({ error: "bad request" }, { status: 400 });
   }
@@ -34,7 +32,6 @@ export async function GET(request: Request) {
       id: workflowId,
     },
   });
-
   if (!workflow) {
     return Response.json({ error: "bad request" }, { status: 400 });
   }
@@ -42,15 +39,13 @@ export async function GET(request: Request) {
   const executionPlan = JSON.parse(
     workflow.executionPlan!
   ) as WorkflowExecutionPlan;
-
   if (!executionPlan) {
     return Response.json({ error: "bad request" }, { status: 400 });
   }
 
-  let nextRun;
   try {
     const cron = parser.parse(workflow.cron!, { tz: "UTC" });
-    nextRun = cron.next().toDate();
+    const nextRun = cron.next().toDate();
 
     const execution = await prisma.workFlowExecution.create({
       data: {

@@ -5,9 +5,7 @@ import { WorkflowStatusEnum } from "@/types/workflow";
 export async function GET(req: Request) {
   const now = new Date();
   const workflows = await prisma.workFlow.findMany({
-    select: {
-      id: true,
-    },
+    select: { id: true },
     where: {
       status: WorkflowStatusEnum.PUBLISHED,
       cron: { not: null },
@@ -33,7 +31,7 @@ function triggerWorkflow(workflowId: string) {
     },
     cache: "no-store",
   }).catch((error) =>
-    console.error(
+    console.log(
       "Error triggering workflow with id",
       workflowId,
       ":error->",
