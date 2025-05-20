@@ -6,6 +6,7 @@ import { LockKeyholeIcon, ShieldIcon, ShieldOffIcon } from "lucide-react";
 import React, { Suspense } from "react";
 import CreateCredentialDialog from "./_components/CreateCredentialDialog";
 import { formatDistanceToNow } from "date-fns";
+import DeleteCredentialDialog from "./_components/DeleteCredentialDialog";
 
 export default function CredentialsPage() {
   return (
@@ -79,6 +80,8 @@ async function UserCredentials() {
                 <p className="text-xs text-muted-foreground">{createdAt}</p>
               </div>
             </div>
+
+            <DeleteCredentialDialog name={credential.name} />
           </Card>
         );
       })}
