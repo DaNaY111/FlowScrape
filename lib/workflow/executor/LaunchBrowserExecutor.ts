@@ -13,6 +13,7 @@ export async function LaunchBrowserExecutor(
     environment.log.info("Browser started successfully");
     environment.setBrowser(browser);
     const page = await browser.newPage();
+    page.setViewport({ width: 1920, height: 1080 });
     await page.goto(websiteUrl);
     environment.setPage(page);
     environment.log.info(`Opened page at: ${websiteUrl}`);
