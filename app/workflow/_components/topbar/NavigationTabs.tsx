@@ -8,7 +8,6 @@ import React from "react";
 export default function NavigationTabs({ workflowId }: { workflowId: string }) {
   const pathname = usePathname();
   const activeValue = pathname?.split("/")[2];
-  console.log("Active value: ", activeValue);
   return (
     <Tabs value={activeValue} className="w-[400px]">
       <TabsList className="grid w-full grid-cols-2">

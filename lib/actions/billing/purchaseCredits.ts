@@ -17,7 +17,6 @@ export async function PurchaseCredits(packId: PackId) {
   if (!selectedPack) {
     throw new Error("invalid pack");
   }
-  const priceId = selectedPack.priceId;
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
